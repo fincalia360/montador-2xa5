@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: montador-2xa5
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .

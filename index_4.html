@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Montador 2 x A5 en A4</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; padding: 16px; background: #f3f3f5; color: #222;
+  }
+  h1 { font-size: 1.2rem; margin: 0 0 12px; }
+  .controles {
+    display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+  }
+  .campo {
+    flex: 1 1 200px; background: #fff; border-radius: 10px;
+    padding: 12px; border: 1px dashed #bbb;
+  }
+  .campo label { display: block; font-weight: 600; margin-bottom: 6px; }
+  button {
+    padding: 12px 18px; border: 0; border-radius: 10px;
+    background: #d6336c; color: #fff; font-size: 1rem; font-weight: 600;
+    cursor: pointer;
+  }
+  button.sec { background: #666; }
+  .vista {
+    background: #fff; border-radius: 10px; padding: 8px;
+    overflow: auto;
+  }
+  /* Hoja A4 apaisada: 297 x 210 mm, con dos A5 (148 x 210 mm) */
+  .hoja {
+    width: 297mm; height: 210mm; position: relative;
+    display: flex; background: #fff; transform-origin: top left;
+  }
+  .a5 {
+    width: 148mm; height: 210mm; overflow: hidden; position: relative;
+    background: #eee;
+  }
+  .a5 img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .a5 .vacio {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; color: #999; font-size: 14px; text-align: center;
+    padding: 10px;
+  }
+  .corte {
+    position: absolute; left: 50%; top: 0; bottom: 0; width: 0;
+    border-left: 0.3mm dashed #888;
+  }
+  /* Escala de la vista previa en pantalla (no afecta a la impresión) */
+  @media screen {
+    .hoja { zoom: 0.5; }
+    @media (max-width: 700px) { .hoja { zoom: 0.28; } }
+  }
+  @page { size: A4 landscape; margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    h1, .controles, .aviso { display: none !important; }
+    .vista { padding: 0; border-radius: 0; overflow: visible; }
+    .hoja { zoom: 1; transform: none; }
+  }
+  .aviso { font-size: 0.85rem; color: #555; margin: 8px 0 0; }
+</style>
+</head>
+<body>
+
+<h1>Montador 2 x A5 en A4</h1>
+
+<div class="controles">
+  <div class="campo">
+    <label for="izq">A5 izquierda</label>
+    <input type="file" id="izq" accept="image/*">
+  </div>
+  <div class="campo">
+    <label for="der">A5 derecha</label>
+    <input type="file" id="der" accept="image/*">
+    <p class="aviso">Si solo subes una, se duplica en las dos mitades.</p>
+  </div>
+</div>
+
+<div class="controles">
+  <button id="imprimir">Imprimir A4</button>
+  <button class="sec" id="limpiar">Limpiar</button>
+</div>
+
+<div class="vista">
+  <div class="hoja" id="hoja">
+    <div class="a5" id="a5-izq"><div class="vacio">Sube la imagen izquierda</div></div>
+    <div class="a5" id="a5-der"><div class="vacio">Sube la imagen derecha</div></div>
+    <div class="corte"></div>
+  </div>
+</div>
+
+<p class="aviso">Imprime con "Tamaño real" o "100 %", papel A4 y orientación horizontal. Desactiva "Ajustar a página".</p>
+
+<script>
+  const izq = document.getElementById("izq");
+  const der = document.getElementById("der");
+  const cajaIzq = document.getElementById("a5-izq");
+  const cajaDer = document.getElementById("a5-der");
+
+  function cargar(input, caja, textoVacio) {
+    const archivo = input.files && input.files[0];
+    if (!archivo) { poner(caja, null, textoVacio); return; }
+    const url = URL.createObjectURL(archivo);
+    poner(caja, url, textoVacio);
+  }
+
+  function poner(caja, url, textoVacio) {
+    caja.innerHTML = "";
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      caja.appendChild(img);
+    } else {
+      const v = document.createElement("div");
+      v.className = "vacio";
+      v.textContent = textoVacio;
+      caja.appendChild(v);
+    }
+  }
+
+  izq.addEventListener("change", () => {
+    cargar(izq, cajaIzq, "Sube la imagen izquierda");
+    if (!der.files || !der.files[0]) {
+      const src = cajaIzq.querySelector("img");
+      if (src) poner(cajaDer, src.src, "Sube la imagen derecha");
+    }
+  });
+
+  der.addEventListener("change", () => {
+    cargar(der, cajaDer, "Sube la imagen derecha");
+  });
+
+  document.getElementById("imprimir").addEventListener("click", () => window.print());
+
+  document.getElementById("limpiar").addEventListener("click", () => {
+    izq.value = ""; der.value = "";
+    poner(cajaIzq, null, "Sube la imagen izquierda");
+    poner(cajaDer, null, "Sube la imagen derecha");
+  });
+</script>
+</body>
+</html>
